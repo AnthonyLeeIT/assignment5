@@ -161,3 +161,4 @@ def calculator_repl():
         print(f"Fatal error: {e}")
         logging.error(f"Fatal error in calculator REPL: {e}")
         raise
+    

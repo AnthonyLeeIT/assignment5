@@ -78,6 +78,10 @@ def test_repl_redo_nothing_to_redo():
     mock_print = run_repl(['redo', 'exit'])
     mock_print.assert_any_call("Nothing to redo")
 
+def test_repl_result_not_decimal():
+    with patch('app.calculator.Calculator.perform_operation', return_value=42):
+        mock_print = run_repl(['add', '2', '3', 'exit'])
+    mock_print.assert_any_call("\nResult: 42")
 
 def test_repl_save_success():
     mock_print = run_repl(['save', 'exit'])
