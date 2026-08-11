@@ -1,56 +1,43 @@
-########################
-# Calculator Memento    #
-########################
-
-from dataclasses import dataclass, field
-import datetime
-from typing import Any, Dict, List
+from datetime import datetime
+from decimal import Decimal
 
 from app.calculation import Calculation
+from app.calculator_memento import CalculatorMemento
 
 
-@dataclass
-class CalculatorMemento:
-    """
-    Stores calculator state for undo/redo functionality.
+def make_calculation():
+    return Calculation(operation="Addition", operand1=Decimal("2"), operand2=Decimal("3"))
 
-    The Memento pattern allows the Calculator to save its current state (history)
-    so that it can be restored later. This enables features like undo and redo.
-    """
 
-    history: List[Calculation]  # List of Calculation instances representing the calculator's history
-    timestamp: datetime.datetime = field(default_factory=datetime.datetime.now)  # Time when the memento was created
+def test_memento_default_timestamp_is_set():
+    memento = CalculatorMemento(history=[make_calculation()])
+    assert isinstance(memento.timestamp, datetime)
 
-    def to_dict(self) -> Dict[str, Any]:
-        """
-        Convert memento to dictionary.
 
-        This method serializes the memento's state into a dictionary format,
-        making it easy to store or transmit.
+def test_memento_to_dict():
+    calc = make_calculation()
+    memento = CalculatorMemento(history=[calc])
+    data = memento.to_dict()
+    assert data["history"] == [calc.to_dict()]
+    assert data["timestamp"] == memento.timestamp.isoformat()
 
-        Returns:
-            Dict[str, Any]: A dictionary containing the serialized state of the memento.
-        """
-        return {
-            'history': [calc.to_dict() for calc in self.history],
-            'timestamp': self.timestamp.isoformat()
-        }
 
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'CalculatorMemento':
-        """
-        Create memento from dictionary.
+def test_memento_from_dict_round_trip():
+    calc = make_calculation()
+    memento = CalculatorMemento(history=[calc])
+    data = memento.to_dict()
 
-        This class method deserializes a dictionary to recreate a CalculatorMemento
-        instance, restoring the calculator's history and timestamp.
+    restored = CalculatorMemento.from_dict(data)
 
-        Args:
-            data (Dict[str, Any]): Dictionary containing serialized memento data.
+    assert len(restored.history) == 1
+    assert restored.history[0] == calc
+    assert restored.timestamp == memento.timestamp
 
-        Returns:
-            CalculatorMemento: A new instance of CalculatorMemento with restored state.
-        """
-        return cls(
-            history=[Calculation.from_dict(calc) for calc in data['history']],
-            timestamp=datetime.datetime.fromisoformat(data['timestamp'])
-        )
+
+def test_memento_empty_history_round_trip():
+    memento = CalculatorMemento(history=[])
+    data = memento.to_dict()
+
+    restored = CalculatorMemento.from_dict(data)
+
+    assert restored.history == []
